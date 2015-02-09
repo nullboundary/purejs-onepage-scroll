@@ -69,15 +69,14 @@ var onePageScroll = (function() {
     _swipeEvents(el);
     document.addEventListener("swipeDown", function(event) {
       if (!_hasClass(body, "disabled-onepage-scroll")) event.preventDefault();
-      moveUp(el);
+      ops.moveUp(el);
     });
     document.addEventListener("swipeUp", function(event) {
       if (!_hasClass(body, "disabled-onepage-scroll")) event.preventDefault();
-      moveDown(el);
+      ops.moveDown(el);
     });
 
     // Create Pagination and Display Them
-
     if (settings.pagination == true) {
       var pagination = document.createElement("ul");
       pagination.setAttribute("class", "onepage-pagination");
@@ -88,6 +87,7 @@ var onePageScroll = (function() {
       document.querySelector(".onepage-pagination").style.marginTop = posTop;
     }
 
+    //upade URL
     if (window.location.hash != "" && window.location.hash != "#1") {
       var init_index = window.location.hash.replace("#", ""),
         next = document.querySelector(settings.sectionContainer + "[data-index='" + (init_index) + "']"),
@@ -117,12 +117,6 @@ var onePageScroll = (function() {
       if (settings.pagination == true) _addClass(document.querySelector(".onepage-pagination li a[data-index='1']"), "active");
     }
 
-    var _paginationHandler = function() {
-      var page_index = this.dataset.index;
-      moveTo(el, page_index);
-    }
-
-
     if (settings.pagination == true) {
       var pagination_links = document.querySelectorAll(".onepage-pagination li a");
 
@@ -131,15 +125,8 @@ var onePageScroll = (function() {
       }
     }
 
-    var _mouseWheelHandler = function(event) {
-      event.preventDefault();
-      var delta = event.wheelDelta || -event.detail;
-      if (!_hasClass(body, "disabled-onepage-scroll")) _init_scroll(event, delta);
-    }
-
     document.addEventListener('mousewheel', _mouseWheelHandler);
     document.addEventListener('DOMMouseScroll', _mouseWheelHandler);
-
 
     if (settings.responsiveFallback != false) {
       window.onresize = function() {
@@ -147,24 +134,6 @@ var onePageScroll = (function() {
       }
 
       _responsive();
-    }
-
-    var _keydownHandler = function(e) {
-      var tag = e.target.tagName.toLowerCase();
-
-      if (!_hasClass(body, "disabled-onepage-scroll")) {
-        switch (e.which) {
-          case 38:
-            if (tag != 'input' && tag != 'textarea') moveUp(el)
-            break;
-          case 40:
-            if (tag != 'input' && tag != 'textarea') moveDown(el)
-            break;
-          default:
-            return;
-        }
-      }
-      return false;
     }
 
     if (settings.keyboard == true) {
@@ -225,6 +194,40 @@ var onePageScroll = (function() {
     }
 
   };
+
+  /*-----------------------------------------------------------*/
+  /*  Handler Functions                                        */
+  /*-----------------------------------------------------------*/
+  var _keydownHandler = function(e) {
+    var tag = e.target.tagName.toLowerCase();
+
+    if (!_hasClass(body, "disabled-onepage-scroll")) {
+      switch (e.which) {
+        case 38:
+          if (tag != 'input' && tag != 'textarea') ops.moveUp(el)
+          break;
+        case 40:
+          if (tag != 'input' && tag != 'textarea') ops.moveDown(el)
+          break;
+        default:
+          return;
+      }
+    }
+    return false;
+  }
+
+  var _mouseWheelHandler = function(event) {
+    event.preventDefault();
+    var delta = event.wheelDelta || -event.detail;
+    if (!_hasClass(body, "disabled-onepage-scroll")) {
+      _init_scroll(event, delta);
+    }
+  }
+
+  var _paginationHandler = function() {
+    var page_index = this.dataset.index;
+    ops.moveTo(el, page_index);
+  }
 
   /*-----------------------------------------------------------*/
   /*  Utility to add/remove class easily with javascript       */
@@ -322,39 +325,59 @@ var onePageScroll = (function() {
 
   var _responsive = function() {
 
-    if (document.body.clientWidth < settings.responsiveFallback) {
+      var valForTest = false;
+      var typeOfRF = typeof settings.responsiveFallback
 
-      _addClass(body, "disabled-onepage-scroll");
-      document.removeEventListener('mousewheel', _mouseWheelHandler);
-      document.removeEventListener('DOMMouseScroll', _mouseWheelHandler);
-      _swipeEvents(el);
-      document.removeEventListener("swipeDown");
-      document.removeEventListener("swipeUp");
+      if (typeOfRF == "number") {
+        valForTest = document.body.clientWidth < settings.responsiveFallback;
+      }
+      if (typeOfRF == "boolean") {
+        valForTest = settings.responsiveFallback;
+      }
 
-    } else {
+      if (valForTest) {
+        _disable_scroll();
+      } else {
+        _enable_scroll();
+      }
+
+    }
+    /*-------------------------------------------*/
+    /*  re-enable onepage scroll                 */
+    /*-------------------------------------------*/
+  var _enable_scroll = function() {
 
       if (_hasClass(body, "disabled-onepage-scroll")) {
         _removeClass(body, "disabled-onepage-scroll");
         _scrollTo(document.documentElement, 0, 2000);
       }
 
-
-
       _swipeEvents(el);
       document.addEventListener("swipeDown", function(event) {
         if (!_hasClass(body, "disabled-onepage-scroll")) event.preventDefault();
-        moveUp(el);
+        ops.moveUp(el);
       });
       document.addEventListener("swipeUp", function(event) {
         if (!_hasClass(body, "disabled-onepage-scroll")) event.preventDefault();
-        moveDown(el);
+        ops.moveDown(el);
       });
 
       document.addEventListener('mousewheel', _mouseWheelHandler);
       document.addEventListener('DOMMouseScroll', _mouseWheelHandler);
-
     }
+    /*-------------------------------------------*/
+    /*  disable one page scroll                  */
+    /*-------------------------------------------*/
+  var _disable_scroll = function() {
+
+    _addClass(body, "disabled-onepage-scroll");
+    document.removeEventListener('mousewheel', _mouseWheelHandler);
+    document.removeEventListener('DOMMouseScroll', _mouseWheelHandler);
+    _swipeEvents(el);
+    document.removeEventListener("swipeDown");
+    document.removeEventListener("swipeUp");
   }
+
 
   /*-------------------------------------------*/
   /*  Initialize scroll detection              */
@@ -378,7 +401,6 @@ var onePageScroll = (function() {
 
     lastAnimation = timeNow;
   }
-
 
   /*-------------------------------------------------------*/
   /*  Public Functions                                     */
@@ -537,28 +559,40 @@ var onePageScroll = (function() {
   /*                                           */
   /*-------------------------------------------*/
   ops.moveBack = function(el6, state) {
-    if (history.replaceState && settings.updateURL == true) {
+      if (history.replaceState && settings.updateURL == true) {
 
-      if (typeof el6 == "string") el6 = document.querySelector(el6);
+        if (typeof el6 == "string") el6 = document.querySelector(el6);
 
-      var next = document.querySelector(settings.sectionContainer + "[data-index='" + (state.index) + "']");
+        var next = document.querySelector(settings.sectionContainer + "[data-index='" + (state.index) + "']");
 
-      var next_index = next.dataset.index;
-      if (typeof settings.beforeMove == 'function') settings.beforeMove(next_index, next);
-      if (blockMove == true) return;
-      _removeClass(el6, "active");
-      _addClass(next, "active");
+        var next_index = next.dataset.index;
+        if (typeof settings.beforeMove == 'function') settings.beforeMove(next_index, next);
+        if (blockMove == true) return;
+        _removeClass(el6, "active");
+        _addClass(next, "active");
 
-      if (settings.pagination == true) {
-        _removeClass(document.querySelector(".onepage-pagination li a" + ".active"), "active");
-        _addClass(document.querySelector(".onepage-pagination li a" + "[data-index='" + (state.index) + "']"), "active");
+        if (settings.pagination == true) {
+          _removeClass(document.querySelector(".onepage-pagination li a" + ".active"), "active");
+          _addClass(document.querySelector(".onepage-pagination li a" + "[data-index='" + (state.index) + "']"), "active");
+        }
+
+        body.className = body.className.replace(/\bviewing-page-\d.*?\b/g, '');
+        _addClass(body, "viewing-page-" + next_index);
+
+        _transformPage(el6, settings, state.pos, state.index, next);
       }
-
-      body.className = body.className.replace(/\bviewing-page-\d.*?\b/g, '');
-      _addClass(body, "viewing-page-" + next_index);
-
-      _transformPage(el6, settings, state.pos, state.index, next);
     }
+    /*-------------------------------------------*/
+    /*  Disable One Page Scrolling               */
+    /*-------------------------------------------*/
+  ops.disable = function() {
+      _disable_scroll();
+    }
+    /*-------------------------------------------*/
+    /*  Enable One page Scrolling                */
+    /*-------------------------------------------*/
+  ops.enable = function() {
+    _enable_scroll();
   }
 
   return ops;
