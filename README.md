@@ -84,6 +84,36 @@ This method allows you to move to the specified page index programatically.
   moveTo(".main", 3);
 ````
 
+### moveBlock(isBlock)
+This method allows you to block or unblock page movement.
+
+````javascript
+  moveBlock(true);
+````
+
+### moveBack(".main",historyState)
+This method shifts the page back in history using the state save mechanism of the history API
+
+````javascript
+  moveBack(".main",window.history.state);
+````
+
+### disable()
+This method disables one page scroll if its not currently needed. 
+
+````javascript
+  disable();
+````
+
+### enable()
+This method renables one page scroll if its been disabled. 
+
+````javascript
+  enable();
+````
+
+
+
 ## Callbacks
 You can use callbacks to perform actions before or after the page move.
 
